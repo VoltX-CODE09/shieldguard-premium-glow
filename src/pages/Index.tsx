@@ -1,12 +1,65 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useState } from 'react';
+import LandingScreen from '@/components/LandingScreen';
+import LoadingScreen from '@/components/LoadingScreen';
+import ProtectionScreen from '@/components/ProtectionScreen';
+import { toast } from 'sonner';
+
+type AppState = 'landing' | 'payment' | 'loading' | 'protected';
 
 const Index = () => {
+  const [appState, setAppState] = useState<AppState>('landing');
+
+  const handleSubscribe = async () => {
+    try {
+      // In a real app, this would integrate with Stripe
+      // For demo purposes, we'll simulate the payment flow
+      toast.success('Payment successful! Activating protection...');
+      setAppState('loading');
+      
+      // You would replace this with actual Stripe integration:
+      // const response = await fetch('/api/create-checkout-session', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ priceId: 'price_xxx' })
+      // });
+      // const { url } = await response.json();
+      // window.open(url, '_blank');
+      
+    } catch (error) {
+      toast.error('Payment failed. Please try again.');
+      console.error('Payment error:', error);
+    }
+  };
+
+  const handleLoadingComplete = () => {
+    setAppState('protected');
+    // Optional: Add haptic feedback or sound here
+    if ('vibrate' in navigator) {
+      navigator.vibrate(200);
+    }
+  };
+
+  const handleBackToHome = () => {
+    setAppState('landing');
+  };
+
+  const renderCurrentScreen = () => {
+    switch (appState) {
+      case 'landing':
+        return <LandingScreen onSubscribe={handleSubscribe} />;
+      case 'loading':
+        return <LoadingScreen onComplete={handleLoadingComplete} />;
+      case 'protected':
+        return <ProtectionScreen onBack={handleBackToHome} />;
+      default:
+        return <LandingScreen onSubscribe={handleSubscribe} />;
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen">
+      {renderCurrentScreen()}
     </div>
   );
 };
