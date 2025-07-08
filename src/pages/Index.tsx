@@ -11,7 +11,7 @@ type AppState = 'landing' | 'payment' | 'loading' | 'protected';
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>('landing');
-  const { user, loading } = useAuth();
+  const { user, loading, subscribed } = useAuth();
   const navigate = useNavigate();
 
   // Redirect to auth if not logged in
@@ -22,24 +22,18 @@ const Index = () => {
   }, [user, loading, navigate]);
 
   const handleSubscribe = async () => {
+    if (!subscribed) {
+      toast.error('Please subscribe first to activate protection');
+      return;
+    }
+
     try {
-      // In a real app, this would integrate with Stripe
-      // For demo purposes, we'll simulate the payment flow
-      toast.success('Payment successful! Activating protection...');
+      toast.success('Activating protection...');
       setAppState('loading');
       
-      // You would replace this with actual Stripe integration:
-      // const response = await fetch('/api/create-checkout-session', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ priceId: 'price_xxx' })
-      // });
-      // const { url } = await response.json();
-      // window.open(url, '_blank');
-      
     } catch (error) {
-      toast.error('Payment failed. Please try again.');
-      console.error('Payment error:', error);
+      toast.error('Failed to activate protection. Please try again.');
+      console.error('Protection activation error:', error);
     }
   };
 
