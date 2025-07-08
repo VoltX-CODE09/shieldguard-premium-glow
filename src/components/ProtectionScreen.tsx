@@ -1,8 +1,8 @@
-
 import { useEffect, useState } from 'react';
-import { Shield, Check, Lock, Wifi, Smartphone } from 'lucide-react';
+import { Shield, Check, Lock, Wifi, Smartphone, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProtectionScreenProps {
   onBack: () => void;
@@ -11,6 +11,7 @@ interface ProtectionScreenProps {
 const ProtectionScreen = ({ onBack }: ProtectionScreenProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [showFeatures, setShowFeatures] = useState(false);
+  const { signOut } = useAuth();
 
   useEffect(() => {
     setIsVisible(true);
@@ -27,8 +28,25 @@ const ProtectionScreen = ({ onBack }: ProtectionScreenProps) => {
     { icon: Smartphone, text: 'Device Firewall Running', status: 'protected' },
   ];
 
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
     <div className="min-h-screen bg-success-gradient flex flex-col items-center justify-center p-6 relative overflow-hidden">
+      {/* Logout button */}
+      <div className="absolute top-6 right-6">
+        <Button 
+          onClick={handleLogout}
+          variant="outline"
+          size="sm"
+          className="border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/50"
+        >
+          <LogOut size={16} className="mr-2" />
+          Logout
+        </Button>
+      </div>
+
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
