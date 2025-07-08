@@ -26,7 +26,7 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
-    const stripe = new Stripe(Deno.env.get("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") || "", { 
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2023-10-16" 
     });
     
@@ -60,6 +60,7 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
+    console.error('Checkout error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
