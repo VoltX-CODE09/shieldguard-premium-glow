@@ -15,7 +15,10 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
+  console.log("=== CHECK-SUBSCRIPTION FUNCTION STARTED ===");
+  
   if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -29,15 +32,24 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    console.log("=== CHECKING STRIPE KEY ===");
+    // List all available environment variables (for debugging)
+    const allEnvVars = Object.keys(Deno.env.toObject());
+    console.log("Available environment variables:", allEnvVars);
+
     // Get the Stripe secret key from environment variables
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    console.log("STRIPE_SECRET_KEY found:", !!stripeKey);
+    console.log("STRIPE_SECRET_KEY preview:", stripeKey?.substring(0, 10) + "...");
     
     if (!stripeKey) {
-      console.error("Available env vars:", Object.keys(Deno.env.toObject()));
+      console.error("STRIPE_SECRET_KEY not found!");
+      console.error("Available env vars:", allEnvVars);
       throw new Error("STRIPE_SECRET_KEY environment variable is not set");
     }
     logStep("Stripe key verified");
 
+    console.log("=== CHECKING AUTHENTICATION ===");
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
     logStep("Authorization header found");
@@ -51,8 +63,13 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    console.log("=== INITIALIZING STRIPE ===");
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    console.log("Stripe initialized successfully");
+    
+    console.log("=== CHECKING FOR STRIPE CUSTOMER ===");
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    console.log("Customer search result:", customers.data.length, "customers found");
     
     if (customers.data.length === 0) {
       logStep("No customer found, updating unsubscribed state");
@@ -74,11 +91,14 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    console.log("=== CHECKING SUBSCRIPTIONS ===");
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
       limit: 1,
     });
+    console.log("Active subscriptions found:", subscriptions.data.length);
+    
     const hasActiveSub = subscriptions.data.length > 0;
     let subscriptionTier = null;
     let subscriptionEnd = null;
@@ -103,7 +123,8 @@ serve(async (req) => {
       logStep("No active subscription found");
     }
 
-    await supabaseClient.from("subscribers").upsert({
+    console.log("=== UPDATING DATABASE ===");
+    const upsertResult = await supabaseClient.from("subscribers").upsert({
       email: user.email,
       user_id: user.id,
       stripe_customer_id: customerId,
@@ -112,6 +133,8 @@ serve(async (req) => {
       subscription_end: subscriptionEnd,
       updated_at: new Date().toISOString(),
     }, { onConflict: 'email' });
+    
+    console.log("Database update result:", upsertResult);
 
     logStep("Updated database with subscription info", { subscribed: hasActiveSub, subscriptionTier });
     return new Response(JSON.stringify({
@@ -124,8 +147,16 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('=== CHECK-SUBSCRIPTION ERROR ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', errorMessage);
+    console.error('Error stack:', error.stack);
     logStep("ERROR in check-subscription", { message: errorMessage });
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    
+    return new Response(JSON.stringify({ 
+      error: errorMessage,
+      details: error.stack 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

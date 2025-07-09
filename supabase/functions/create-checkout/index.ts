@@ -9,9 +9,15 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  console.log("=== CREATE-CHECKOUT FUNCTION STARTED ===");
+  
   if (req.method === "OPTIONS") {
+    console.log("Handling OPTIONS request");
     return new Response(null, { headers: corsHeaders });
   }
+
+  console.log("Request method:", req.method);
+  console.log("Request headers:", Object.fromEntries(req.headers.entries()));
 
   // Create a Supabase client using the anon key
   const supabaseClient = createClient(
@@ -20,32 +26,65 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    console.log("=== CHECKING AUTHENTICATION ===");
+    const authHeader = req.headers.get("Authorization");
+    console.log("Auth header present:", !!authHeader);
+    console.log("Auth header preview:", authHeader?.substring(0, 20) + "...");
+    
+    if (!authHeader) {
+      throw new Error("No authorization header provided");
+    }
 
+    const token = authHeader.replace("Bearer ", "");
+    console.log("Token extracted, length:", token.length);
+    
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
+    console.log("Auth response error:", authError);
+    console.log("Auth response data:", data);
+    
+    const user = data.user;
+    if (!user?.email) {
+      console.log("User authentication failed - no user or email");
+      throw new Error("User not authenticated or email not available");
+    }
+    
+    console.log("User authenticated successfully:", user.email);
+
+    console.log("=== CHECKING STRIPE KEY ===");
+    // List all available environment variables (for debugging)
+    const allEnvVars = Object.keys(Deno.env.toObject());
+    console.log("Available environment variables:", allEnvVars);
+    
     // Get the Stripe secret key from environment variables
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
+    console.log("STRIPE_SECRET_KEY found:", !!stripeSecretKey);
+    console.log("STRIPE_SECRET_KEY preview:", stripeSecretKey?.substring(0, 10) + "...");
     
     if (!stripeSecretKey) {
-      console.error("Stripe secret key not found. Available env vars:", Object.keys(Deno.env.toObject()));
+      console.error("STRIPE_SECRET_KEY not found!");
+      console.error("Available env vars:", allEnvVars);
       throw new Error("STRIPE_SECRET_KEY environment variable is not set");
     }
 
-    console.log("Stripe key found:", stripeSecretKey.substring(0, 20) + "...");
-
+    console.log("=== INITIALIZING STRIPE ===");
     const stripe = new Stripe(stripeSecretKey, { 
       apiVersion: "2023-10-16" 
     });
+    console.log("Stripe initialized successfully");
     
+    console.log("=== CHECKING FOR EXISTING CUSTOMER ===");
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    console.log("Customer search result:", customers.data.length, "customers found");
+    
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
+      console.log("Found existing customer:", customerId);
+    } else {
+      console.log("No existing customer found");
     }
 
+    console.log("=== CREATING CHECKOUT SESSION ===");
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -65,13 +104,23 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/`,
     });
 
+    console.log("Checkout session created successfully:", session.id);
+    console.log("Checkout URL:", session.url);
+
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    console.error('Checkout error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error('=== CHECKOUT ERROR ===');
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      details: error.stack 
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
