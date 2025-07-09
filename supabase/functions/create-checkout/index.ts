@@ -26,7 +26,17 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
+    // Get the Stripe secret key from environment
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY") || 
+                           Deno.env.get("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");
+    
+    if (!stripeSecretKey) {
+      throw new Error("Stripe secret key not found in environment variables");
+    }
+
+    console.log("Using Stripe key:", stripeSecretKey ? "Key found" : "Key not found");
+
+    const stripe = new Stripe(stripeSecretKey, { 
       apiVersion: "2023-10-16" 
     });
     
