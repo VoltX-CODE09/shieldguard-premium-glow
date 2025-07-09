@@ -29,11 +29,13 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Get the Stripe secret key from environment
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") || 
-                     Deno.env.get("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");
+    // Get the Stripe secret key - use the actual secret name from your project
+    const stripeKey = Deno.env.get("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");
     
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      console.error("Available env vars:", Object.keys(Deno.env.toObject()));
+      throw new Error("STRIPE_SECRET_KEY is not set");
+    }
     logStep("Stripe key verified");
 
     const authHeader = req.headers.get("Authorization");
