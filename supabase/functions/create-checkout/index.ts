@@ -17,7 +17,6 @@ serve(async (req) => {
   }
 
   console.log("Request method:", req.method);
-  console.log("Request headers:", Object.fromEntries(req.headers.entries()));
 
   // Create a Supabase client using the anon key
   const supabaseClient = createClient(
@@ -29,7 +28,6 @@ serve(async (req) => {
     console.log("=== CHECKING AUTHENTICATION ===");
     const authHeader = req.headers.get("Authorization");
     console.log("Auth header present:", !!authHeader);
-    console.log("Auth header preview:", authHeader?.substring(0, 20) + "...");
     
     if (!authHeader) {
       throw new Error("No authorization header provided");
@@ -40,7 +38,6 @@ serve(async (req) => {
     
     const { data, error: authError } = await supabaseClient.auth.getUser(token);
     console.log("Auth response error:", authError);
-    console.log("Auth response data:", data);
     
     const user = data.user;
     if (!user?.email) {
@@ -51,18 +48,11 @@ serve(async (req) => {
     console.log("User authenticated successfully:", user.email);
 
     console.log("=== CHECKING STRIPE KEY ===");
-    // List all available environment variables (for debugging)
-    const allEnvVars = Object.keys(Deno.env.toObject());
-    console.log("Available environment variables:", allEnvVars);
-    
-    // Get the Stripe secret key from environment variables
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     console.log("STRIPE_SECRET_KEY found:", !!stripeSecretKey);
-    console.log("STRIPE_SECRET_KEY preview:", stripeSecretKey?.substring(0, 10) + "...");
     
     if (!stripeSecretKey) {
       console.error("STRIPE_SECRET_KEY not found!");
-      console.error("Available env vars:", allEnvVars);
       throw new Error("STRIPE_SECRET_KEY environment variable is not set");
     }
 

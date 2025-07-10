@@ -33,18 +33,12 @@ serve(async (req) => {
     logStep("Function started");
 
     console.log("=== CHECKING STRIPE KEY ===");
-    // List all available environment variables (for debugging)
-    const allEnvVars = Object.keys(Deno.env.toObject());
-    console.log("Available environment variables:", allEnvVars);
-
     // Get the Stripe secret key from environment variables
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     console.log("STRIPE_SECRET_KEY found:", !!stripeKey);
-    console.log("STRIPE_SECRET_KEY preview:", stripeKey?.substring(0, 10) + "...");
     
     if (!stripeKey) {
       console.error("STRIPE_SECRET_KEY not found!");
-      console.error("Available env vars:", allEnvVars);
       throw new Error("STRIPE_SECRET_KEY environment variable is not set");
     }
     logStep("Stripe key verified");
