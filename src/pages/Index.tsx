@@ -6,12 +6,16 @@ import LoadingScreen from '@/components/LoadingScreen';
 import ProtectionScreen from '@/components/ProtectionScreen';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import useLanguage from '@/hooks/useLanguage';
+import { getTranslation } from '@/translations';
 
 type AppState = 'landing' | 'payment' | 'loading' | 'protected';
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>('landing');
   const { user, loading, subscribed } = useAuth();
+  const { language } = useLanguage();
+  const t = getTranslation(language);
   const navigate = useNavigate();
 
   // Redirect to auth if not logged in
@@ -23,16 +27,16 @@ const Index = () => {
 
   const handleSubscribe = async () => {
     if (!subscribed) {
-      toast.error('Please subscribe first to activate protection');
+      toast.error(t.messages.subscribeFirst);
       return;
     }
 
     try {
-      toast.success('Activating protection...');
+      toast.success(t.messages.activatingProtection);
       setAppState('loading');
       
     } catch (error) {
-      toast.error('Failed to activate protection. Please try again.');
+      toast.error(t.messages.protectionError);
       console.error('Protection activation error:', error);
     }
   };

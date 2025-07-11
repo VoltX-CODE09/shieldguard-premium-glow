@@ -7,6 +7,8 @@ import { Shield, Check } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import useLanguage from '@/hooks/useLanguage';
+import { getTranslation } from '@/translations';
 
 interface SubscriptionModalProps {
   children: React.ReactNode;
@@ -17,30 +19,32 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const { session, checkSubscription } = useAuth();
+  const { language } = useLanguage();
+  const t = getTranslation(language);
 
   const plans = [
     {
       id: 'monthly',
-      name: 'Månedlig',
+      name: t.subscription.monthly,
       price: '4,99',
-      period: 'per måned',
+      period: t.pricing.perMonth,
       totalPrice: 4.99,
       interval: 'month'
     },
     {
       id: 'yearly',
-      name: 'Årlig',
+      name: t.subscription.yearly,
       price: '99,99',
-      period: 'per år',
+      period: language === 'no' ? 'per år' : 'per year',
       totalPrice: 99.99,
       interval: 'year',
-      savings: 'Spar 40%!'
+      savings: t.subscription.savings
     }
   ];
 
   const handleSubscribe = async () => {
     if (!session) {
-      toast.error('Vennligst logg inn først');
+      toast.error(t.messages.loginFirst);
       return;
     }
 
@@ -59,7 +63,7 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
       });
 
       if (error) {
-        toast.error('Kunne ikke opprette checkout-økt');
+        toast.error(t.messages.checkoutError);
         console.error('Checkout error:', error);
         return;
       }
@@ -74,7 +78,7 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
 
       setIsOpen(false);
     } catch (error) {
-      toast.error('Noe gikk galt. Vennligst prøv igjen.');
+      toast.error(t.messages.generalError);
       console.error('Payment error:', error);
     } finally {
       setIsLoading(false);
@@ -91,7 +95,7 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
           <DialogTitle className="text-center">
             <div className="flex items-center justify-center space-x-2">
               <Shield className="text-primary" size={24} />
-              <span>Velg Abonnement</span>
+              <span>{t.subscription.title}</span>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -130,15 +134,15 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
           <div className="space-y-3">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <Check size={16} className="text-primary" />
-              <span>Avanserte sikkerhetsprotokoller</span>
+              <span>{t.subscription.features.security}</span>
             </div>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <Check size={16} className="text-primary" />
-              <span>Sanntids trusseldeteksjon</span>
+              <span>{t.subscription.features.detection}</span>
             </div>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <Check size={16} className="text-primary" />
-              <span>24/7 beskyttelsesovervåking</span>
+              <span>{t.subscription.features.monitoring}</span>
             </div>
           </div>
 
@@ -150,22 +154,22 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
             {isLoading ? (
               <div className="flex items-center space-x-2">
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                <span>Behandler...</span>
+                <span>{t.subscription.processing}</span>
               </div>
             ) : (
               <>
                 <Shield className="mr-2" size={20} />
-                Abonner Nå
+                {t.buttons.subscribeNow}
               </>
             )}
           </Button>
 
           <div className="text-center text-xs text-muted-foreground space-y-1">
             <div className="flex justify-center items-center space-x-4">
-              <span>🔒 Sikker Checkout</span>
-              <span>💳 Stripe Beskyttet</span>
+              <span>{t.trust.secureCheckout}</span>
+              <span>{t.trust.stripeProtected}</span>
             </div>
-            <div>Avbryt når som helst</div>
+            <div>{t.pricing.cancelAnytime}</div>
           </div>
         </div>
       </DialogContent>

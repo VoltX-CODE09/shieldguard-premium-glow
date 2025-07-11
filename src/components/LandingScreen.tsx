@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SubscriptionModal from './SubscriptionModal';
+import useLanguage from '@/hooks/useLanguage';
+import { getTranslation } from '@/translations';
 
 interface LandingScreenProps {
   onSubscribe: () => void;
@@ -14,6 +16,8 @@ interface LandingScreenProps {
 
 const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
   const { session, subscribed, checkSubscription } = useAuth();
+  const { language } = useLanguage();
+  const t = getTranslation(language);
 
   const handleManageSubscription = async () => {
     if (!session) return;
@@ -26,14 +30,14 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
       });
 
       if (error) {
-        toast.error('Kunne ikke åpne kundeportal');
+        toast.error(t.messages.portalError);
         return;
       }
 
       // Open customer portal in a new tab
       window.open(data.url, '_blank');
     } catch (error) {
-      toast.error('Noe gikk galt. Vennligst prøv igjen.');
+      toast.error(t.messages.generalError);
       console.error('Portal error:', error);
     }
   };
@@ -62,10 +66,10 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
           
           <div className="space-y-2">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-              ShieldGuard
+              {t.title}
             </h1>
             <p className="text-muted-foreground text-lg">
-              Ultimate Mobile Protection
+              {t.subtitle}
             </p>
           </div>
         </div>
@@ -75,15 +79,15 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <Lock className="text-primary" size={20} />
-              <span className="text-sm">Avanserte sikkerhetsprotokoller</span>
+              <span className="text-sm">{t.features.security}</span>
             </div>
             <div className="flex items-center space-x-3">
               <Zap className="text-primary" size={20} />
-              <span className="text-sm">Sanntids trusseldeteksjon</span>
+              <span className="text-sm">{t.features.detection}</span>
             </div>
             <div className="flex items-center space-x-3">
               <Star className="text-primary" size={20} />
-              <span className="text-sm">24/7 beskyttelsesovervåking</span>
+              <span className="text-sm">{t.features.monitoring}</span>
             </div>
           </div>
         </Card>
@@ -92,9 +96,9 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
         {subscribed && (
           <Card className="p-4 bg-primary/10 border-primary/30">
             <div className="text-center">
-              <div className="text-primary font-semibold">✅ Premium Aktiv</div>
+              <div className="text-primary font-semibold">{t.status.premiumActive}</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Du har full tilgang til ShieldGuard beskyttelse
+                {t.status.premiumDescription}
               </div>
             </div>
           </Card>
@@ -103,9 +107,9 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
         {/* Pricing */}
         <div className="text-center space-y-4 fade-in-up delay-300">
           <div className="space-y-2">
-            <div className="text-3xl font-bold text-primary">Fra €4.99</div>
-            <div className="text-muted-foreground">per måned</div>
-            <div className="text-xs text-muted-foreground">Avbryt når som helst</div>
+            <div className="text-3xl font-bold text-primary">{t.pricing.from}</div>
+            <div className="text-muted-foreground">{t.pricing.perMonth}</div>
+            <div className="text-xs text-muted-foreground">{t.pricing.cancelAnytime}</div>
           </div>
 
           {subscribed ? (
@@ -115,21 +119,21 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
                 className="w-full py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
                 <Shield className="mr-2" size={20} />
-                Aktiver Beskyttelse
+                {t.buttons.activateProtection}
               </Button>
               <Button 
                 onClick={handleManageSubscription}
                 variant="outline"
                 className="w-full border-primary/30 text-primary hover:bg-primary/10"
               >
-                Administrer Abonnement
+                {t.buttons.manageSubscription}
               </Button>
             </div>
           ) : (
             <SubscriptionModal>
               <Button className="w-full py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                 <Shield className="mr-2" size={20} />
-                Abonner Nå
+                {t.buttons.subscribeNow}
               </Button>
             </SubscriptionModal>
           )}
@@ -138,10 +142,10 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
         {/* Trust indicators */}
         <div className="text-center space-y-2 text-xs text-muted-foreground fade-in-up delay-500">
           <div className="flex justify-center items-center space-x-4">
-            <span>🔒 Sikker Checkout</span>
-            <span>💳 Stripe Beskyttet</span>
+            <span>{t.trust.secureCheckout}</span>
+            <span>{t.trust.stripeProtected}</span>
           </div>
-          <div>Pålitelig av tusenvis av brukere verden over</div>
+          <div>{t.trust.trustedBy}</div>
         </div>
       </div>
     </div>
