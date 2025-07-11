@@ -52,9 +52,11 @@ serve(async (req) => {
     const { priceAmount, interval } = requestBody;
     console.log("Price amount:", priceAmount, "Interval:", interval);
 
-    // Default to monthly if no specific pricing is provided
-    const finalPriceAmount = priceAmount || 499; // €4.99 in cents
+    // Default pricing
+    const finalPriceAmount = priceAmount || 499; // Default fallback
     const finalInterval = interval || 'month';
+
+    console.log("Final price amount:", finalPriceAmount, "Final interval:", finalInterval);
 
     console.log("=== CHECKING STRIPE KEY ===");
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -84,6 +86,14 @@ serve(async (req) => {
     }
 
     console.log("=== CREATING CHECKOUT SESSION ===");
+    
+    // Create product name based on interval
+    const productName = finalInterval === 'day' 
+      ? "ShieldGuard Premium Protection (Daily)" 
+      : finalInterval === 'year'
+      ? "ShieldGuard Premium Protection (Yearly)"
+      : "ShieldGuard Premium Protection";
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -91,7 +101,7 @@ serve(async (req) => {
         {
           price_data: {
             currency: "eur",
-            product_data: { name: "ShieldGuard Premium Protection" },
+            product_data: { name: productName },
             unit_amount: finalPriceAmount,
             recurring: { interval: finalInterval },
           },
