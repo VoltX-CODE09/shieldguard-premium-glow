@@ -47,6 +47,15 @@ serve(async (req) => {
     
     console.log("User authenticated successfully:", user.email);
 
+    console.log("=== PARSING REQUEST BODY ===");
+    const requestBody = await req.json();
+    const { priceAmount, interval } = requestBody;
+    console.log("Price amount:", priceAmount, "Interval:", interval);
+
+    // Default to monthly if no specific pricing is provided
+    const finalPriceAmount = priceAmount || 499; // €4.99 in cents
+    const finalInterval = interval || 'month';
+
     console.log("=== CHECKING STRIPE KEY ===");
     const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     console.log("STRIPE_SECRET_KEY found:", !!stripeSecretKey);
@@ -83,8 +92,8 @@ serve(async (req) => {
           price_data: {
             currency: "eur",
             product_data: { name: "ShieldGuard Premium Protection" },
-            unit_amount: 499, // €4.99 in cents
-            recurring: { interval: "month" },
+            unit_amount: finalPriceAmount,
+            recurring: { interval: finalInterval },
           },
           quantity: 1,
         },

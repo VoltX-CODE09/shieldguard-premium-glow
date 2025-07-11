@@ -6,49 +6,14 @@ import { Card } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import SubscriptionModal from './SubscriptionModal';
 
 interface LandingScreenProps {
   onSubscribe: () => void;
 }
 
 const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
-  const [isLoading, setIsLoading] = useState(false);
   const { session, subscribed, checkSubscription } = useAuth();
-
-  const handleSubscribe = async () => {
-    if (!session) {
-      toast.error('Please log in first');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) {
-        toast.error('Failed to create checkout session');
-        console.error('Checkout error:', error);
-        return;
-      }
-
-      // Open Stripe checkout in a new tab
-      window.open(data.url, '_blank');
-      
-      // Check subscription status after a delay
-      setTimeout(() => {
-        checkSubscription();
-      }, 2000);
-    } catch (error) {
-      toast.error('Something went wrong. Please try again.');
-      console.error('Payment error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleManageSubscription = async () => {
     if (!session) return;
@@ -61,14 +26,14 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
       });
 
       if (error) {
-        toast.error('Failed to open customer portal');
+        toast.error('Kunne ikke åpne kundeportal');
         return;
       }
 
       // Open customer portal in a new tab
       window.open(data.url, '_blank');
     } catch (error) {
-      toast.error('Something went wrong. Please try again.');
+      toast.error('Noe gikk galt. Vennligst prøv igjen.');
       console.error('Portal error:', error);
     }
   };
@@ -110,15 +75,15 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
           <div className="space-y-4">
             <div className="flex items-center space-x-3">
               <Lock className="text-primary" size={20} />
-              <span className="text-sm">Advanced Security Protocols</span>
+              <span className="text-sm">Avanserte sikkerhetsprotokoller</span>
             </div>
             <div className="flex items-center space-x-3">
               <Zap className="text-primary" size={20} />
-              <span className="text-sm">Real-time Threat Detection</span>
+              <span className="text-sm">Sanntids trusseldeteksjon</span>
             </div>
             <div className="flex items-center space-x-3">
               <Star className="text-primary" size={20} />
-              <span className="text-sm">24/7 Protection Monitoring</span>
+              <span className="text-sm">24/7 beskyttelsesovervåking</span>
             </div>
           </div>
         </Card>
@@ -127,9 +92,9 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
         {subscribed && (
           <Card className="p-4 bg-primary/10 border-primary/30">
             <div className="text-center">
-              <div className="text-primary font-semibold">✅ Premium Active</div>
+              <div className="text-primary font-semibold">✅ Premium Aktiv</div>
               <div className="text-xs text-muted-foreground mt-1">
-                You have full access to ShieldGuard protection
+                Du har full tilgang til ShieldGuard beskyttelse
               </div>
             </div>
           </Card>
@@ -138,9 +103,9 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
         {/* Pricing */}
         <div className="text-center space-y-4 fade-in-up delay-300">
           <div className="space-y-2">
-            <div className="text-3xl font-bold text-primary">€4.99</div>
-            <div className="text-muted-foreground">per month</div>
-            <div className="text-xs text-muted-foreground">Cancel anytime</div>
+            <div className="text-3xl font-bold text-primary">Fra €4.99</div>
+            <div className="text-muted-foreground">per måned</div>
+            <div className="text-xs text-muted-foreground">Avbryt når som helst</div>
           </div>
 
           {subscribed ? (
@@ -150,44 +115,33 @@ const LandingScreen = ({ onSubscribe }: LandingScreenProps) => {
                 className="w-full py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
                 <Shield className="mr-2" size={20} />
-                Activate Protection
+                Aktiver Beskyttelse
               </Button>
               <Button 
                 onClick={handleManageSubscription}
                 variant="outline"
                 className="w-full border-primary/30 text-primary hover:bg-primary/10"
               >
-                Manage Subscription
+                Administrer Abonnement
               </Button>
             </div>
           ) : (
-            <Button 
-              onClick={handleSubscribe}
-              disabled={isLoading}
-              className="w-full py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-            >
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin"></div>
-                  <span>Processing...</span>
-                </div>
-              ) : (
-                <>
-                  <Shield className="mr-2" size={20} />
-                  Subscribe Now
-                </>
-              )}
-            </Button>
+            <SubscriptionModal>
+              <Button className="w-full py-6 text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <Shield className="mr-2" size={20} />
+                Abonner Nå
+              </Button>
+            </SubscriptionModal>
           )}
         </div>
 
         {/* Trust indicators */}
         <div className="text-center space-y-2 text-xs text-muted-foreground fade-in-up delay-500">
           <div className="flex justify-center items-center space-x-4">
-            <span>🔒 Secure Checkout</span>
-            <span>💳 Stripe Protected</span>
+            <span>🔒 Sikker Checkout</span>
+            <span>💳 Stripe Beskyttet</span>
           </div>
-          <div>Trusted by thousands of users worldwide</div>
+          <div>Pålitelig av tusenvis av brukere verden over</div>
         </div>
       </div>
     </div>
