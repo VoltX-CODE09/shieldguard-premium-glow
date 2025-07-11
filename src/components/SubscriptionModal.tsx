@@ -30,8 +30,8 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
       price: '4,99',
       period: t.pricing.perMonth,
       totalPrice: 4.99,
-      interval: 'day', // Changed to daily billing for monthly plan
-      billingNote: language === 'no' ? 'Belastes daglig (€0,16 per dag)' : 'Charged daily (€0.16 per day)'
+      interval: 'day', // Charges daily but shows as monthly
+      billingNote: language === 'no' ? 'Faktureres daglig (€4,99 per dag)' : 'Charged daily (€4.99 per day)'
     },
     {
       id: 'yearly',
@@ -54,17 +54,18 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
     try {
       const selectedPlanData = plans.find(p => p.id === selectedPlan);
       
-      // For daily billing, we need to calculate the daily amount
-      const dailyAmount = selectedPlanData!.id === 'monthly' 
-        ? Math.round((selectedPlanData!.totalPrice * 100) / 30) // Divide monthly price by 30 days
-        : Math.round(selectedPlanData!.totalPrice * 100);
+      // For daily billing (monthly plan), charge €4.99 daily (499 cents)
+      // For yearly billing, charge €99.99 yearly (9999 cents)
+      const amount = selectedPlanData!.id === 'monthly' 
+        ? 499 // €4.99 daily
+        : 9999; // €99.99 yearly
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: {
-          priceAmount: dailyAmount,
+          priceAmount: amount,
           interval: selectedPlanData!.interval
         }
       });

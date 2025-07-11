@@ -52,9 +52,10 @@ serve(async (req) => {
     const { priceAmount, interval } = requestBody;
     console.log("Price amount:", priceAmount, "Interval:", interval);
 
-    // Default pricing
-    const finalPriceAmount = priceAmount || 499; // Default fallback
-    const finalInterval = interval || 'month';
+    // For monthly plan: charge €4.99 daily (499 cents)
+    // For yearly plan: charge €99.99 yearly (9999 cents)
+    const finalPriceAmount = interval === 'day' ? 499 : 9999; // Daily €4.99 or Yearly €99.99
+    const finalInterval = interval; // 'day' or 'year'
 
     console.log("Final price amount:", finalPriceAmount, "Final interval:", finalInterval);
 
@@ -89,10 +90,8 @@ serve(async (req) => {
     
     // Create product name based on interval
     const productName = finalInterval === 'day' 
-      ? "ShieldGuard Premium Protection (Daily)" 
-      : finalInterval === 'year'
-      ? "ShieldGuard Premium Protection (Yearly)"
-      : "ShieldGuard Premium Protection";
+      ? "ShieldGuard Premium Protection (Monthly)" // Still shows as "Monthly" even though charged daily
+      : "ShieldGuard Premium Protection (Yearly)";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
