@@ -30,8 +30,8 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
       price: '4,99',
       period: t.pricing.perMonth,
       totalPrice: 4.99,
-      interval: 'day', // Charges daily but shows as monthly
-      billingNote: language === 'no' ? 'Faktureres daglig (€4,99 per dag)' : 'Charged daily (€4.99 per day)'
+      interval: 'year', // Back to yearly billing
+      billingNote: language === 'no' ? 'Faktureres årlig (€4,99 per år)' : 'Charged annually (€4.99 per year)'
     },
     {
       id: 'yearly',
@@ -54,10 +54,9 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
     try {
       const selectedPlanData = plans.find(p => p.id === selectedPlan);
       
-      // For daily billing (monthly plan), charge €4.99 daily (499 cents)
-      // For yearly billing, charge €99.99 yearly (9999 cents)
+      // For monthly plan now charges yearly €4.99, yearly plan €99.99
       const amount = selectedPlanData!.id === 'monthly' 
-        ? 499 // €4.99 daily
+        ? 499 // €4.99 yearly for "monthly" plan
         : 9999; // €99.99 yearly
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -216,33 +215,27 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
                 {language === 'no' ? 'Du har allerede et aktivt abonnement.' : 'You already have an active subscription.'}
               </p>
               
-              {/* Hidden manage subscription option - requires clicking small settings icon */}
-              <div className="flex justify-center">
-                <button
-                  onClick={() => setShowManageOptions(!showManageOptions)}
-                  className="p-2 text-muted-foreground hover:text-primary transition-colors"
-                  title={language === 'no' ? 'Abonnementshåndtering' : 'Subscription Management'}
-                >
-                  <Settings size={16} />
-                </button>
+              {/* Super hidden manage subscription - requires triple click on tiny dot */}
+              <div className="flex justify-center relative">
+                <div 
+                  onClick={(e) => {
+                    e.detail === 3 && setShowManageOptions(!showManageOptions);
+                  }}
+                  className="w-2 h-2 rounded-full bg-muted-foreground/20 cursor-default"
+                  title=""
+                />
               </div>
               
               {showManageOptions && (
-                <div className="space-y-2 pt-2 border-t">
-                  <Button
-                    onClick={handleManageSubscription}
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs"
-                  >
-                    {language === 'no' ? 'Håndter abonnement' : 'Manage Subscription'}
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    {language === 'no' 
-                      ? 'Her kan du endre betalingsinformasjon eller si opp abonnementet'
-                      : 'Here you can change payment info or cancel subscription'
-                    }
-                  </p>
+                <div className="space-y-1 pt-1">
+                  <div className="text-center">
+                    <button
+                      onClick={handleManageSubscription}
+                      className="text-xs text-muted-foreground/60 hover:text-muted-foreground underline"
+                    >
+                      {language === 'no' ? 'administrere' : 'manage'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

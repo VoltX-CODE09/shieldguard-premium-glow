@@ -52,10 +52,10 @@ serve(async (req) => {
     const { priceAmount, interval } = requestBody;
     console.log("Price amount:", priceAmount, "Interval:", interval);
 
-    // For monthly plan: charge €4.99 daily (499 cents)
+    // For monthly plan: now charge €4.99 yearly (499 cents)
     // For yearly plan: charge €99.99 yearly (9999 cents)
-    const finalPriceAmount = interval === 'day' ? 499 : 9999; // Daily €4.99 or Yearly €99.99
-    const finalInterval = interval; // 'day' or 'year'
+    const finalPriceAmount = interval === 'year' && priceAmount === 499 ? 499 : 9999; // €4.99 or €99.99 yearly
+    const finalInterval = 'year'; // Always yearly now
 
     console.log("Final price amount:", finalPriceAmount, "Final interval:", finalInterval);
 
@@ -88,9 +88,9 @@ serve(async (req) => {
 
     console.log("=== CREATING CHECKOUT SESSION ===");
     
-    // Create product name based on interval
-    const productName = finalInterval === 'day' 
-      ? "ShieldGuard Premium Protection (Monthly)" // Still shows as "Monthly" even though charged daily
+    // Create product name based on price
+    const productName = finalPriceAmount === 499
+      ? "ShieldGuard Premium Protection (Monthly)" // Shows as "Monthly" but charged yearly
       : "ShieldGuard Premium Protection (Yearly)";
 
     const session = await stripe.checkout.sessions.create({
