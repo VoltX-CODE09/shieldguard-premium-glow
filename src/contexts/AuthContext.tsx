@@ -35,8 +35,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
 
   const checkSubscription = async () => {
-    if (!session?.access_token) return;
+    if (!session?.access_token) {
+      console.log('No session token for subscription check');
+      return;
+    }
     
+    console.log('Checking subscription status...');
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription', {
         headers: {
@@ -49,9 +53,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+      console.log('Subscription check result:', data);
       setSubscribed(data.subscribed || false);
       setSubscriptionTier(data.subscription_tier || null);
       setSubscriptionEnd(data.subscription_end || null);
+      
+      if (data.subscribed) {
+        console.log('User is subscribed!');
+      } else {
+        console.log('User is not subscribed');
+      }
     } catch (error) {
       console.error('Error in checkSubscription:', error);
     }

@@ -30,8 +30,8 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
       price: '4,99',
       period: t.pricing.perMonth,
       totalPrice: 4.99,
-      interval: 'year', // Back to yearly billing
-      billingNote: language === 'no' ? 'Faktureres årlig (€4,99 per år)' : 'Charged annually (€4.99 per year)'
+      interval: 'month', // Monthly billing
+      billingNote: language === 'no' ? 'Faktureres månedlig (€4,99 per måned)' : 'Charged monthly (€4.99 per month)'
     },
     {
       id: 'yearly',
@@ -54,9 +54,9 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
     try {
       const selectedPlanData = plans.find(p => p.id === selectedPlan);
       
-      // For monthly plan now charges yearly €4.99, yearly plan €99.99
+      // For monthly plan: €4.99 monthly, yearly plan: €99.99 yearly
       const amount = selectedPlanData!.id === 'monthly' 
-        ? 499 // €4.99 yearly for "monthly" plan
+        ? 499 // €4.99 monthly
         : 9999; // €99.99 yearly
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -78,10 +78,11 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
       // Open Stripe checkout in a new tab
       window.open(data.url, '_blank');
       
-      // Check subscription status after a delay
+      // Check subscription status after longer delay to ensure Stripe processes payment
       setTimeout(() => {
+        console.log('Checking subscription status after payment...');
         checkSubscription();
-      }, 2000);
+      }, 5000); // Increased from 2 to 5 seconds
 
       setIsOpen(false);
     } catch (error) {
