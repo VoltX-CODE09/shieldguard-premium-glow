@@ -41,6 +41,17 @@ const Index = () => {
     }
   };
 
+  const handleActivateProtection = async () => {
+    try {
+      toast.success(t.messages.activatingProtection);
+      setAppState('loading');
+      
+    } catch (error) {
+      toast.error(t.messages.protectionError);
+      console.error('Protection activation error:', error);
+    }
+  };
+
   const handleLoadingComplete = () => {
     setAppState('protected');
     // Optional: Add haptic feedback or sound here
@@ -70,13 +81,13 @@ const Index = () => {
   const renderCurrentScreen = () => {
     switch (appState) {
       case 'landing':
-        return <LandingScreen onSubscribe={handleSubscribe} />;
+        return <LandingScreen onSubscribe={subscribed ? handleActivateProtection : handleSubscribe} />;
       case 'loading':
         return <LoadingScreen onComplete={handleLoadingComplete} />;
       case 'protected':
         return <ProtectionScreen onBack={handleBackToHome} />;
       default:
-        return <LandingScreen onSubscribe={handleSubscribe} />;
+        return <LandingScreen onSubscribe={subscribed ? handleActivateProtection : handleSubscribe} />;
     }
   };
 
