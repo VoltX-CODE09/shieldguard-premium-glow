@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import LandingScreen from '@/components/LandingScreen';
 import LoadingScreen from '@/components/LoadingScreen';
 import ProtectionScreen from '@/components/ProtectionScreen';
@@ -13,10 +13,11 @@ type AppState = 'landing' | 'payment' | 'loading' | 'protected';
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>('landing');
-  const { user, loading, subscribed } = useAuth();
+  const { user, loading, subscribed, checkSubscription } = useAuth();
   const { language } = useLanguage();
   const t = getTranslation(language);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -24,6 +25,22 @@ const Index = () => {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  // Handle return from Stripe checkout
+  useEffect(() => {
+    const payment = searchParams.get('payment');
+    if (payment === 'success' && user) {
+      toast.success(t.messages.paymentSuccess);
+      // Check subscription status after successful payment
+      checkSubscription();
+      // Clear the payment parameter from URL
+      setSearchParams({});
+    } else if (payment === 'cancelled' && user) {
+      toast.info(t.messages.paymentCancelled);
+      // Clear the payment parameter from URL
+      setSearchParams({});
+    }
+  }, [searchParams, user, checkSubscription, t.messages, setSearchParams]);
 
   const handleSubscribe = async () => {
     if (!subscribed) {

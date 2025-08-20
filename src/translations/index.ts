@@ -53,7 +53,9 @@ export const translations = {
       generalError: 'Something went wrong. Please try again.',
       subscribeFirst: 'Please subscribe first to activate protection',
       activatingProtection: 'Activating protection...',
-      protectionError: 'Failed to activate protection. Please try again.'
+      protectionError: 'Failed to activate protection. Please try again.',
+      paymentSuccess: 'Payment successful! Your subscription is now active.',
+      paymentCancelled: 'Payment was cancelled. You can try again anytime.'
     }
   },
   no: {
@@ -107,7 +109,9 @@ export const translations = {
       generalError: 'Noe gikk galt. Vennligst prøv igjen.',
       subscribeFirst: 'Vennligst abonner først for å aktivere beskyttelse',
       activatingProtection: 'Aktiverer beskyttelse...',
-      protectionError: 'Kunne ikke aktivere beskyttelse. Vennligst prøv igjen.'
+      protectionError: 'Kunne ikke aktivere beskyttelse. Vennligst prøv igjen.',
+      paymentSuccess: 'Betaling vellykket! Ditt abonnement er nå aktivt.',
+      paymentCancelled: 'Betaling ble avbrutt. Du kan prøve igjen når som helst.'
     }
   }
 };
