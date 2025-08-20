@@ -68,15 +68,9 @@ const SubscriptionModal = ({ children }: SubscriptionModalProps) => {
         return;
       }
 
-      // Open Stripe checkout in a new tab
-      window.open(data.url, '_blank');
-      
-      // Check subscription status after a delay
-      setTimeout(() => {
-        checkSubscription();
-      }, 2000);
-
-      setIsOpen(false);
+      // Redirect to Stripe checkout in the same window instead of popup
+      // This prevents popup blocker issues
+      window.location.href = data.url;
     } catch (error) {
       toast.error(t.messages.generalError);
       console.error('Payment error:', error);
